@@ -10,17 +10,22 @@ from tqdm import tqdm
 
 from utils import epoch_time, save_model
 
+DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 def train_epoch(model, data_loader, optimizer, criterion, clip, epoch):
     model.train()
     epoch_loss = 0
     for src, tgt in tqdm(data_loader, total=len(data_loader), desc=f"Training {epoch+1}"):
+        src = src.to(DEVICE)
+        tgt = tgt.to(DEVICE)
+
         optimizer.zero_grad()
         output, _ = model(src, tgt[:,:-1])
         output_dim = output.shape[-1]
         output = output.contiguous().view(-1, output_dim)
         tgt = tgt[:,1:].contiguous().view(-1)
-        loss = criterion(output, tgt)
+
+        loss = criterion(output, tgt).to(DEVICE)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
@@ -32,11 +37,14 @@ def evaluate(model, data_loader, criterion):
     epoch_loss = 0
     with torch.no_grad():
         for src, tgt in tqdm(data_loader, total=len(data_loader), desc="Evaluating"):
+            src = src.to(DEVICE)
+            tgt = tgt.to(DEVICE)
+
             output, _ = model(src, tgt[:,:-1])
             output_dim = output.shape[-1]
             output = output.contiguous().view(-1, output_dim)
             tgt = tgt[:,1:].contiguous().view(-1)
-            loss = criterion(output, tgt)
+            loss = criterion(output, tgt).to(DEVICE)
             epoch_loss += loss.item()
     return epoch_loss / len(data_loader)
 

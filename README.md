@@ -26,4 +26,5 @@ Here are some other fields that we use for evaluation and analysis:
 - **is_answerable**: boolean. Output of the answerability classifier indicating whether the question is answerable using the review snippets.
 - **top_sentences_IR**: List of strings. A list of top sentences (at most 10) based on IR score with the question.
 
+## Model
 
